@@ -39,12 +39,3 @@ spec = do
       let input  = ";;; first comment\nHAHA  HH AA HH AA\n;;; second comment yea \nHA  HH AA\n"
           output = Just ("" :: ByteString, [("HAHA", ["HH", "AA", "HH", "AA"]), ("HA", ["HH", "AA"])])
       in finiteParse CMUDict.dictFile input `shouldBe` output
-
-  describe "CMUDict lookup" $ do
-    let dict = CMUDict.buildTrie ";;; test comment\nHAHA  HH AA HH AA\nHA  HH AA\nCONDESCEND  K AA2 N D IH0 S EH1 N D\n"
-    it "finds pronuciation" $
-      Trie.lookup "HAHA" dict `shouldBe` Just ["HH", "AA", "HH", "AA"]
-    it "distinguishes between similar words" $
-      Trie.lookup "HA" dict `shouldBe` Just ["HH", "AA"]
-    it "fails to find sometimes" $
-      Trie.lookup "missing" dict `shouldBe` Nothing
