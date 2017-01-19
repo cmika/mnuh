@@ -3,7 +3,7 @@
 module CMUDictSpec (main, spec) where
 
 import Test.Hspec
-import qualified CMUDict
+import CMUDict
 import qualified Data.Attoparsec.ByteString as Atto
 import Data.ByteString (ByteString)
 import qualified Data.Trie as Trie
@@ -24,18 +24,28 @@ spec = do
       in finiteParse CMUDict.comment input `shouldBe` Just (" this is not the comment" :: ByteString, ())
 
     it "parses words" $
-      finiteParse CMUDict.word "Something    or other\n" `shouldBe` Just ("or other\n" :: ByteString, "Something" :: ByteString)
+      let input  = "Something    or other\n" :: ByteString
+          output = ("or other\n" :: ByteString, "Something" :: ByteString)
+      in finiteParse CMUDict.word input `shouldBe` Just output
 
     it "parses symbols" $
-      finiteParse CMUDict.symbol "HH AA HH AA" `shouldBe` Just (" AA HH AA" :: ByteString, "HH" :: String)
+      let input  = "HH AA1 HH AA0"
+          output = (" AA1 HH AA0" :: ByteString, (HH, Nothing))
+      in finiteParse CMUDict.symbol input `shouldBe` Just output
 
     it "parses pronunciations" $
-      finiteParse CMUDict.pronunciation "HH AA HH AA" `shouldBe` Just ("" :: ByteString, ["HH","AA","HH","AA"]:: [String])
+      let input  = "HH AA1 HH AA0"
+          output = ("" :: ByteString, [(HH,Nothing),(AA,Just Primary),(HH,Nothing),(AA,Just None)])
+      in finiteParse CMUDict.pronunciation input `shouldBe` Just output
 
     it "parses entries" $
-      finiteParse CMUDict.entry "HAHA  HH AA HH AA\n" `shouldBe` Just ("" :: ByteString, ("HAHA", ["HH", "AA", "HH", "AA"]))
+      let input  = "HAHA  HH AA1 HH AA0\n"
+          output = ("" :: ByteString, ("HAHA", [(HH,Nothing),(AA,Just Primary),(HH,Nothing),(AA,Just None)]))
+      in finiteParse CMUDict.entry input `shouldBe` Just output
 
     it "parses both entries and comments" $
-      let input  = ";;; first comment\nHAHA  HH AA HH AA\n;;; second comment yea \nHA  HH AA\n"
-          output = Just ("" :: ByteString, [("HAHA", ["HH", "AA", "HH", "AA"]), ("HA", ["HH", "AA"])])
-      in finiteParse CMUDict.dictFile input `shouldBe` output
+      let input  = ";;; first comment\nHAHA  HH AA1 HH AA0\n;;; second comment yea \nHA  HH AA1\n"
+          output = ("" :: ByteString,
+                    [("HAHA", [(HH,Nothing),(AA,Just Primary),(HH,Nothing),(AA,Just None)])
+                    ,("HA", [(HH,Nothing),(AA,Just Primary)])])
+      in finiteParse CMUDict.dictFile input `shouldBe` Just output
